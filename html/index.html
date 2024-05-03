@@ -1,0 +1,764 @@
+<!doctype html>
+<html>
+<meta charset="utf-8">
+
+<head>
+  <title>MAV POKER</title>
+  <link rel="stylesheet" href="page_style.css">
+</head>
+
+<body>
+  <div class="header"> <!-- header div -->
+    <h1 >
+      MAV POKER
+    </h1>
+  </div> <!-- header div -->
+
+  <!-- content div -->
+  <div style="background-color: rgb(249,246,239); margin: 10px 50px 10px; padding: 20px;"> 
+    <div id="landing_page" style="display: block;">
+
+      <div id="landing_opts">
+        <p>
+          <button name="new_game" onclick="onLandingNewGame()" style="padding: 15px 30px; font-size: 20px;">New
+            Game</button>
+        </p>
+        <p>
+          <button name="join_game" onclick="onLandingJoinGame()" style="padding: 15px 30px; font-size: 20px;">Join
+            Game</button>
+        </p>
+      </div> <!-- landing_opts -->
+
+      <div id="join_game_opts" hidden>
+        <p><input id="player_name" placeholder="Enter your name" type="text"></p>
+        <p><input id="join_room" placeholder="Enter room pin" type="number" min="0"></p>
+        <p><button name="join_room" onclick="joinRoom()">Join Room</button></p>
+      </div>
+      <!--join_room_opts-->
+
+      <div id="new_game_opts" hidden>
+        <p><input id="leader_name" placeholder="Enter your name" type="text"></p>
+        <p><input id="starting_balance" placeholder="Enter starting balance" type="number" value="2000" min="50"></p>
+        <!-- <p>Private: <input type="checkbox" id="visibility"></p> -->
+        <p><button name="create_room" onclick="createRoom()">Create Room</button></p>
+      </div>
+    </div> <!-- landing page -->
+
+    <div id="game_page" hidden>
+      <div id="game_hud">
+        <h4 id="my_info" style="font-weight: normal;"></h4>
+        <h4 id="game_info" style="font-weight: normal;"></h4>
+      </div> <!-- game_hud -->
+
+      <hr>
+
+      <div> <!-- game interface div -->
+        <div id="pre_match">
+          <p>
+            <button id="start_match" onclick="onStartMatch('START_MATCH')">Start Match</button>
+            <p id="waiting_for_leader">Waiting for more players to join...</p>
+          </p>
+        </div> <!-- pre_match -->
+      
+        <div id="match">
+          <div id="cards">
+            <p>
+              <input type="checkbox" class="card" id="card1" onchange="onCardClick(1)"/>
+              <label for="card1"><img src="1B.svg" id="card1_img" width="150" data-card_selected="false"/></label>
+  
+              <input type="checkbox" class="card" id="card2" onchange="onCardClick(2)"/>
+              <label for="card2"><img src="1B.svg" id="card2_img" width="150" data-card_selected="false"/></label>
+  
+              <input type="checkbox" class="card" id="card3" onchange="onCardClick(3)"/>
+              <label for="card3"><img src="1B.svg" id="card3_img" width="150" data-card_selected="false"/></label>
+  
+              <input type="checkbox" class="card" id="card4" onchange="onCardClick(4)"/>
+              <label for="card4"><img src="1B.svg" id="card4_img" width="150" data-card_selected="false"/></label>
+  
+              <input type="checkbox" class="card" id="card5" onchange="onCardClick(5)"/>
+              <label for="card5"><img src="1B.svg" id="card5_img" width="150" data-card_selected="false"/></label>
+            </p>
+          </div> <!-- cards -->
+  
+          <div id="game_buttons">
+            <div id="betting_round_buttons">
+              <p>
+                <p id="my_bet"></p>
+                <p id="min_bet"></p>
+              </p>
+              <p>
+                <button id="call_button" onclick="onCall()" title="Match the minimum bet">Call</button>
+                <button id="check_button" onclick="onCheck()" title="Do not place a bet">Check</button>
+                <button id="fold_button" onclick="onFold()" title="Withdraw from this match">Fold</button>
+                <button id="raise_toggle" onclick="onRaiseToggle()" title="Raise the minimum bet">Raise 🔽</button>
+                
+                <div id="raise_interface" style="display: none; justify-content: center;">
+                  <button id="confirm_raise_button" onclick="onRaise(-1)" title="Confirm raise amount" style="margin-right: 30px;">Confirm</button>
+                  <button id="$10_raise" onclick="onRaise(10)" title="Raise my bet by $10">$10</button>
+                  <button id="$20_raise" onclick="onRaise(20)" title="Raise my bet by $20">$20</button>
+                  <button id="$50_raise" onclick="onRaise(50)" title="Raise my bet by $50">$50</button>
+                  <input id="raise_numberfield" placeholder="Raise by ..." type="number" min="0.01" max="2000" step="0.01" style="width: 3cm;" oninput="onRaiseAmountChange('numberfield')">
+                  <input id="raise_range" type="range" min="0.01" max="2000" step="0.01" value="10" style="width: 7cm;" oninput="onRaiseAmountChange('range')">
+                </div> <!-- raise_interface -->
+              </p>
+            </div> <!-- betting_round_buttons -->
+  
+            <div id="draw_round_button">
+              <p>
+                <button id="swap_button" onclick="onSwap()" title="Swap the selected cards for new ones">Swap Selected</button>
+                <p id="swap_tip">Click on up to 3 cards to select them...</p>
+              </p>
+            </div> <!-- draw_round_button -->
+          </div> <!-- game_buttons -->
+        </div> <!-- match div -->
+  
+        <p id="room_pin" style="justify-content: left;"></p>
+        <h3 id="match_log">Match Log</h3>
+        <div id="info_area" style="height: 4cm; overflow-y: auto; background: rgba(1, 1, 1, 0.09);"></div>
+      </div> <!-- game interface div -->
+    </div> <!-- game_page -->
+  </div> <!-- content div -->
+
+  <footer>
+    <p>
+      <input type="button" name="back_to_main" value="Main Menu" onclick="onBackToMain()">
+      <input type="button" id="rules" value="Show Rules" onclick="onRules()">
+    </p>
+    <div id="rules_area" style="display: none;">
+      <p>
+        <h4>Rounds</h4>
+        <ul>
+          <b>pre match : </b> In this phase, an ante of $20 is collected from all players participating in the match.
+          <b>1st Betting Round (1st Round) : </b> In this round, each player is given the opportunity to give an initial bet.<br />
+          <b>Draw Round (2nd Round) : </b> In this round, each player is allowed to swap out a maximum of 3 cards which are
+          then replaced by random cards from the deck.<br />
+          <b>Betting Round (3rd Round) : </b> In this round, each player is given the opportunity to give a second bet.<br />
+          <b>Showdown Round (4th Round) : </b> In this round, all (unfolded) hands are then compared to one another,with the victor being the player with the best hand.<br />
+        </ul>
+
+        <h4>
+          Hand Rankings (Strongest to Weakest):
+        </h4>
+        <ul>
+          <b>Royal Flush : </b> A, K, Q, J, and T(10) with all the same suit. <br />
+          <b>Straight Flush : </b> All cards values are in sequential order and share the same suit.<br />
+          <b>Four of a Kind : </b> Four cards that have the same value.<br />
+          <b>Full House : </b> Three of a Kind and a Pair.<br />
+          <b>Flush : </b> All cards share the same suit but not in sequential order.<br />
+          <b>Straight : </b> All cards values are in sequential order but do not share the same suit.<br />
+          <b>Three of a Kind : </b> Three cards that have the same value.<br />
+          <b>Two Pair : </b> Two different pairs.<br />
+          <b>Pair : </b> Two cards that have the same value.<br />
+          <b>High Card : </b> When a hand has none of the above ranks, the highest card plays.<br />
+        </ul>
+        
+        <h4>Tie Breaker Rules:</h4>
+        <ul>
+          Two hands are only tied if their ranking is the same <b>and</b> they share all the same card values <br />
+          <b>Repeating Hands :</b> These include Four of a Kind, Full House, Three of a Kind, Two Pair, and Pair. To break a tie between those hands, 
+              Their repeating cards are compared. For instance, two Full Houses will compare their Three of a Kind to break the tie. 
+              If they are the same, their Pairs will be compared <br />
+          <b>Non Repeating hands :</b> These include Royal Flush, Straight Flush, Flush, Straight, High Card. To break a tie between those hands,
+              Their highest unique cards will be compared. For instance, two High Cards will compare their highest unique card to break the tie.
+              If that is the same, their next highest card will be compared and so forth.
+        </ul>
+
+        <h4>UI Symbols:</h4>
+        <ul>
+          👑 : Is shown next to the room leader's name. The game leader is the player who started the room. <br />
+          ⬅️⬅️ : Is shown next to the name of whomever's turn it currently is. <br />
+          🏆 : Is shown in the game log, next to the name of the player(s) who won the match, <br />
+          ❌ : Is shown before the name of any player that is currently folded.
+        </ul>
+
+        <h4>Game Buttons:</h4>
+        <ul>
+          <b>Call : </b> Increase your current bet to match the minimum bet exactly. <br />
+          <b>Check : </b> Keep the minimum bet the same amount. <br />
+          <b>Fold : </b> Stop participating in the current match and do not place further bets until the next match is started. <br />
+          <b>Raise : </b> Raise your bet by a certain amount. Your bet + raised amount must be greater than the minimum bet. <br />
+          <ul>
+            <b>$10, $20, and $50 : </b> Raise your bet by that amount. Disabled if current bet + that amount is not greater than the minimum bet. <br />
+            <b>Textbox and slider : </b> Specify a different amount to raise your bet. Minimum is minimum bet + $0.01; Maximum is your current balance. <br />
+          </ul> 
+        </ul>
+
+        If you are having an issue with the game, try refreshing the page and rejoin/ recreate your room. <b>Your current match progress will be lost.</b>
+      </p>
+    </div> <!-- rules_area -->
+  </footer>
+</body>
+
+</html>
+<script>
+  
+  var connection = null;
+  
+  var serverUrl;
+  serverUrl = "ws://" + window.location.hostname + ":8881";
+  
+  connection = new WebSocket(serverUrl);
+  connection.onopen = function (evt) {
+    console.log("open");
+  }
+
+  connection.onclose = function (evt) {
+    console.log("close")
+  }
+
+  var playerId
+
+  var room
+  var me
+
+  var selectedCards = [0, 0, 0, 0, 0]
+  var cardsClicked = 0
+
+  var isRaisePressed = false;
+
+  connection.onmessage = function (evt) {
+    // Take the msg and turn it into a javascript object
+    var msg = evt.data
+    const obj = JSON.parse(msg);
+
+    console.log("Received:")
+    console.log(obj)
+
+    if (obj == null) {
+      if (room == null) {
+        alert("Something went wrong... Please try again.")
+      }
+    } else if (obj.hasOwnProperty('id')) {
+      playerId = obj.id
+
+      console.log("player ID = " + playerId)
+    } else if (obj.hasOwnProperty('pin') && (isMyRoom(obj.players) || playerId == obj.leaderId)) {
+      room = obj
+      me = obj.players[playerId]
+
+      console.log("Me:")
+      console.log(me)
+
+      updateUI()
+    }
+  }
+
+  function isMyRoom(playerList) {
+    var myIdFound = false
+
+    for (var id in playerList) {
+      if (playerId == id) {
+        myIdFound = true
+        break
+      }
+    }
+
+    console.log("This is my room")
+    return myIdFound
+  }
+
+  function updateUI() {
+    setDisplay("landing_page", "none")
+    setDisplay("game_page", "block")
+
+    //Update hud and other labels
+    updateLabels()
+
+    //Update whether buttons are disabled or enabled
+    updateButtonAvailability()
+    
+    //Update Card Images
+    if (me.hand.cards[0] != null) {
+      var cards = me.hand.cards
+      for (var i = 0; i < 5; i++) {
+        var card = getElement("card" + (i + 1) + "_img").src = cards[i].svg
+      }
+    }
+    
+    //Prematch UI visibility
+    if (room.match.round == "WAITING") {
+      if (room.leaderId != me.id) {
+        setDisplay("start_match", "none")
+      } else {
+        setDisplay("start_match", "block")
+      }
+      
+      setDisplay("waiting_for_leader", "flex")
+      setDisplay("pre_match", "block")
+    } else {
+      setDisplay("pre_match", "none")
+    }
+
+    //Match UI
+    if (room.match.round != "WAITING") {
+      //Debugging info
+      console.log("Round: " + room.match.round)
+      console.log(room.players[room.match.currentPlayerID].name + "'s Turn (ID: " + room.match.currentPlayerID + ")")
+       
+      setDisplay("match", "block")
+
+      disableCardSelectors(!(room.match.round == "DRAWING") || !(room.match.currentPlayerID == me.id))
+
+      updateRaiseAmountUI("raise_numberfield")
+      updateRaiseAmountUI("raise_range")
+
+      //Set swap tip visibility
+      if (getElement("swap_button").disabled) {
+        setDisplay("swap_tip", "none")
+      } else {
+        setDisplay("swap_tip", "flex")
+      }
+      
+      // display correct button set
+      if (room.match.winnerID[0] != -1) {
+        appointWinner(room.match.winnerID)
+      } else if (room.match.round == "FIRST_BETTING" || room.match.round == "SECOND_BETTING") {
+        setDisplay("betting_round_buttons", "block")
+        setDisplay("draw_round_button", "none")
+      } else if (room.match.round == "DRAWING") {
+        setDisplay("betting_round_buttons", "none")
+        setDisplay("draw_round_button", "block")
+      }
+    } else {
+      setDisplay("match", "none")
+    }
+  }
+
+  function updateLabels() {
+    //Pre match
+    if (room.playerCount > 1) {
+      getElement("waiting_for_leader").innerHTML = "Waiting for the game leader to begin the match..."
+    } else {
+      getElement("waiting_for_leader").innerHTML = "Waiting for more players to join..."
+    }
+
+
+    // Room Pin
+    if (me.id == room.leaderId) {
+      getElement("room_pin").innerHTML = "Room Pin: [<b>" + room.pin + "</b>]. Share this with friends you want to join"
+    }
+
+    // Match log
+    getElement("match_log").innerHTML = "Match Log (" + room.playerCount + "/5 players)"
+    if (room.match.action != "") {
+      getElement("info_area").innerHTML = room.match.action + '<br/>' + info_area.innerHTML
+    }
+
+    // HUD labels
+    getElement("my_info").innerHTML = "<b>NAME: </b>" + me.name + "  <b>(id: </b>" + playerId + "<b>) <br/> BALANCE: $ </b>" + me.balance + "<br/>"
+    if (room.match.round != "WAITING") {
+      getElement("my_info").innerHTML += "<b>MY HAND: </b>" + me.hand.handType + "<br/>"
+    }
+
+    getElement("game_info").innerHTML = "<b>BET POOL: $</b>" + room.match.bettingPool + "<br/><br/>"
+    for (var id in room.players) {
+      var bal = "$" + room.players[id].balance
+      var name = room.players[id].name;
+
+      if (id == room.leaderId) {
+        name = "👑 " + name
+      }
+
+      if (room.players[id].balance == 0 && room.match.round != "WAITING") {
+        bal = "ALL OUT"
+      }
+
+      var turnMarker = ""
+      if (room.match.currentPlayerID == id && room.match.round != "WAITING") {
+        turnMarker = " ⬅️⬅️"
+      }
+
+      var label = "<b>" + name + ": </b>" + bal + turnMarker + "<br/>"
+
+      if (room.players[id].folded) {
+        label = "❌ " + label
+      }
+
+      getElement("game_info").innerHTML += label
+    }
+
+    //Betting info
+    getElement("my_bet").innerHTML = "<b>My Bet: $</b>" + me.currentBet
+    getElement("min_bet").innerHTML = "<b>Min Bet: $</b>" + room.match.minimumBet
+  }
+
+  function updateButtonAvailability() {
+    //Pre match buttons
+    setDisabled("start_match", !(room.match.round == "WAITING" && room.playerCount > 1))
+
+    //Betting round buttons
+    setDisabled("call_button", !(room.match.minimumBet > me.currentBet) || !(room.match.currentPlayerID == me.id) || !(me.balance != 0))
+    setDisabled("check_button", !(room.match.minimumBet <= me.currentBet || me.balance == 0) || !(room.match.currentPlayerID == me.id))
+    setDisabled("fold_button", !(me.balance != 0) || !(room.match.currentPlayerID == me.id))
+    setDisabled("raise_toggle", !(me.balance != 0) || !(room.match.currentPlayerID == me.id))
+
+    //raise interface visibility
+    if (getElement("raise_toggle").disabled && isRaisePressed) {
+      onRaiseToggle()
+    }
+
+    //raise interface buttons
+    setDisabled("confirm_raise_button", getElement("raise_toggle").disabled)
+
+    setDisabled("$10_raise", !((me.currentBet + 10) > room.match.minimumBet))
+    setDisabled("$20_raise", !((me.currentBet + 20) > room.match.minimumBet))
+    setDisabled("$50_raise", !((me.currentBet + 50) > room.match.minimumBet))
+
+    setDisabled("raise_numberfield", getElement("raise_toggle").disabled)
+    setDisabled("raise_range", getElement("raise_toggle").disabled)
+
+    //Swap round button
+    setDisabled("swap_button", !(room.match.currentPlayerID == me.id))
+  }
+
+  function updateRaiseAmountUI(id) {
+    getElement(id).min = (room.match.minimumBet - me.currentBet) + 0.01
+    getElement(id).max = me.balance
+    getElement(id).value = getElement(id).min
+  }
+
+  function isWinner(winnerIds, playerID) {
+    var isWinner = false
+    for (var i = 1; i <= winnerIds[0]; i++) {
+      if (playerID == winnerIds[i]) {
+        isWinner = true
+        break
+      }
+    }
+
+    return isWinner
+  }
+
+  function appointWinner(winnerId) {
+    getElement("start_match").innerHTML = "Play Again"
+    
+    var info_area = getElement("info_area")
+    for (var id in room.players) {
+      var action = room.players[id].name + " had " + room.players[id].hand.handType + ": ["
+      for (var i = 0; i < 4; i++) {
+        action += room.players[id].hand.cards[i].emoji + ", "
+      }
+      action += room.players[id].hand.cards[4].emoji + "] "
+      
+      if (isWinner(winnerId, id)) {
+        action = "🏆 " + action
+      }
+
+      if(room.players[id].folded) {
+        action = "❌ " + action
+      }
+      
+      info_area.innerHTML = action + '<br/>' + info_area.innerHTML
+    }
+
+    var msg = ""
+    for (var i = 1; i <= winnerId[0]; i++) {
+      msg += room.players[winnerId[i]].name
+      if ((winnerId[0] - i) != 0) {
+        msg += " and "
+      }
+    }
+    
+    msg += " won the match with a " + room.players[winnerId[1]].hand.handType
+
+    alert(msg)
+
+    if (me.id == room.leaderId) {
+      onStartMatch('RESTART_MATCH')
+    }
+  }
+
+  function onRaiseAmountChange(changer) {
+    var raise_range = getElement("raise_range")
+    var raise_numberfield = getElement("raise_numberfield")
+
+    if (changer == "range") {
+      raise_numberfield.value = raise_range.value
+    } else if (changer == "numberfield") {
+      raise_range.value = raise_numberfield.value
+    }
+  }
+
+  function onRaiseToggle() {
+    if (isRaisePressed) {
+      isRaisePressed = false
+      getElement("raise_toggle").innerHTML = "Raise 🔽"
+      setDisplay("raise_interface", "none")
+    } else {
+      isRaisePressed = true
+      getElement("raise_toggle").innerHTML = "Raise 🔼"
+      setDisplay("raise_interface", "flex")
+    }
+
+    getElement("raise_toggle").dataset.pressed = isRaisePressed
+  }
+
+  function onBackToMain() {
+    if (typeof room != "undefined") {
+      var leaveEvt = {
+        event: "LEAVE_ROOM",
+        roomID: room.pin,
+        playerID: me.id,
+        msg: [""]
+      }
+      
+      connection.send(JSON.stringify(leaveEvt));
+    }
+
+    setDisplay("landing_opts", "block")
+    setDisplay("new_game_opts", "none")
+    setDisplay("join_game_opts", "none")
+    setDisplay("game_page", "none")
+  }
+
+  function onLandingNewGame() {
+    setDisplay("landing_opts", "none")
+    setDisplay("new_game_opts", "block")
+  }
+
+  function onLandingJoinGame() {
+    setDisplay("landing_opts", "none")
+    setDisplay("join_game_opts", "block")
+  }
+
+  /* Author: Waseem Alkasbutrus
+  * Last Updated: 04/2/2022
+  * 
+  * joinRoom(): called whenever a user clicks on the join room button
+  */
+  function joinRoom() {
+    var joinRoomId = getElement("join_room").value
+    var name = getElement("player_name").value
+
+    if (joinRoomId != "" && name != "") {
+      if (joinRoomId >= 0) {
+        var joinEvt = {
+          event: "JOIN_ROOM",
+          roomID: -1,
+          playerID: playerId,
+          msg: [joinRoomId, name]
+        }
+    
+        connection.send(JSON.stringify(joinEvt));
+      } else {
+        alert("Room PIN cannot be negative")
+      }
+    } else {
+      alert("Please fill all fields.")
+    }
+  }
+
+  function onRules() {
+    var rules = getElement("rules_area")
+    var show_rules = getElement("rules")
+
+    if (rules.style.display == "block") {
+      rules.style.display = "none"
+      show_rules.value = "Show Rules"
+    } else if (rules.style.display == "none") {
+      rules.style.display = "block"
+      show_rules.value = "Hide Rules"
+    }
+  }
+
+  function createRoom() {
+    var leaderName = getElement("leader_name").value
+    var startingBalance = getElement("starting_balance").value
+    //var visibility = getElement("visibility").checked
+
+    var visibility = "PRIVATE"
+
+    // if (visibility) {
+    //   visibility = "PRIVATE"
+    // } else {
+    //   visibility = "PUBLIC"
+    // }
+
+    if (leaderName != "" && startingBalance != "") {
+      if (startingBalance >= 50) {
+        var evt = {
+          event: "CREATE_ROOM",
+          roomID: -1,
+          playerID: playerId,
+          msg: [leaderName, startingBalance, visibility]
+        }
+    
+        connection.send(JSON.stringify(evt))
+      } else {
+        alert("Starting balance cannot be less than $50")
+      }
+    } else {
+      alert("Please fill all fields.")
+    }
+  }
+
+  function onStartMatch(evt) {
+    if (room.playerCount > 1 || evt == "RESTART_MATCH") {
+      if (room.leaderId == playerId) {
+        var startMatchEvt = {
+          event: evt,
+          roomID: room.pin,
+          playerID: playerId,
+          msg: []
+        }
+
+        connection.send(JSON.stringify(startMatchEvt))
+
+      } else {
+        alert("Only room leader can start the match")
+      }
+    } else {
+      alert("More players needed to start match");
+    }
+  }
+
+  function onRaise(raiseBy) {
+    if (room.match.currentPlayerID == playerId) {
+      var textbox = getElement("raise_numberfield")
+      var amount = textbox.value
+      
+      if (raiseBy != -1) {
+        amount = raiseBy
+      }
+
+      if ((amount + me.currentBet) > room.match.minimumBet) {
+        var raiseEvt = {
+          event: "RAISE",
+          roomID: room.pin,
+          playerID: playerId,
+          msg: [amount.toString()]
+        }
+
+        connection.send(JSON.stringify(raiseEvt))
+        textbox.value = ""
+      } else {
+        alert("Your bet after raising must be greater than the minimum bet: $" + room.match.minimumBet)
+      }
+    } else {
+      alert("Not your turn")
+    }
+  }
+
+  function onCall() {
+    if (room.match.currentPlayerID == playerId) {
+      var callEvt = {
+        event: "CALL",
+        roomID: room.pin,
+        playerID: playerId,
+        msg: ["NONE"]
+      }
+
+      connection.send(JSON.stringify(callEvt))
+    } else {
+      alert("Not your turn")
+    }
+  }
+
+  function onFold() {
+    if (room.match.currentPlayerID == playerId) {
+      var foldEvt = {
+        event: "FOLD",
+        roomID: room.pin,
+        playerID: playerId,
+        msg: [""]
+      }
+
+      connection.send(JSON.stringify(foldEvt))
+    } else {
+      alert("Not your turn")
+    }
+  }
+
+  function onCheck() {
+    if (room.match.currentPlayerID == playerId) {
+      var checkEvt = {
+        event: "CHECK",
+        roomID: room.pin,
+        playerID: playerId,
+        msg: [""]
+      }
+
+      connection.send(JSON.stringify(checkEvt))
+    } else {
+      alert("Not your turn")
+    }
+  }
+
+  function onSwap() {
+    if (room.match.currentPlayerID == playerId) {
+      console.log(cardsClicked)
+      var cardsToSwap = getSelectedCards()
+      var swapEvt = {
+        event: "EXCHANGE_CARDS",
+        roomID: room.pin,
+        playerID: playerId,
+        msg: cardsToSwap
+      }
+      
+      connection.send(JSON.stringify(swapEvt))
+      
+      clearSelectedCards()
+    } else {
+      alert("Not your turn")
+    }
+  }
+  
+  function onCardClick(id) {
+    card = getElement('card' + id)
+    cardImage = getElement('card' + id + '_img')
+    
+    if (cardsClicked == 3 && card.checked == true) {
+      card.checked = false
+      cardImage.dataset.card_selected=false
+    } else if (cardsClicked < 3 && card.checked == true) {
+      cardsClicked++
+      selectedCards[id - 1] = 1
+      cardImage.dataset.card_selected="true"
+    } else if (card.checked == false) {
+      cardsClicked--
+      selectedCards[id - 1] = 0
+      cardImage.dataset.card_selected="false"
+    }
+    console.log(selectedCards)
+  }
+
+  function disableCardSelectors(bool) {
+    for (var i = 1; i <= 5; i++) {
+      setDisabled('card' + i, bool)
+    }
+  }
+
+  function clearSelectedCards() {
+    for (var i = 0; i < 5; i++) {
+      if (selectedCards[i] == 1) {
+        getElement('card' + (i + 1)).click()
+      }
+    }
+  }
+
+  function getSelectedCards() {
+    var checkedCardsCount = cardsClicked
+    var checkedCards = ['' + checkedCardsCount]
+
+    for (var i = 0; i < 5; i++) {
+      if (selectedCards[i] == 1) {
+        checkedCards[(cardsClicked + 1) - checkedCardsCount] = '' + i
+        checkedCardsCount--;
+      }
+    }
+
+    return checkedCards
+  }
+
+  function getElement(id) {
+    return document.getElementById(id)
+  }
+
+  function setDisplay(id, display) {
+    getElement(id).style.display = display
+  }
+
+  function setDisabled(id, disabled) {
+    getElement(id).disabled = disabled
+  }
+</script>
